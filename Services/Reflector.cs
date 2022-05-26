@@ -5,6 +5,51 @@ namespace ReflectionCreation.Services;
 
 public class Reflector
 {
+    public static T CreateInstanceUsingExpressions<T>(DataClass data)
+    {
+        Type instanceType = typeof(T);
+        var constructor = instanceType.GetConstructors().First();
+        var properties = typeof(T).GetProperties();
+        var arguments = new List<Expression>();
+
+        foreach(var parameter in constructor.GetParameters())
+        {
+            var dataProperty = typeof(DataClass).GetProperties()
+                .Where(p => p.Name == parameter.Name)
+                .First();
+                
+            var dataValue = dataProperty.GetValue(data);
+
+            arguments.Add(Expression.Constant(dataValue));
+        }
+
+        var newExpression = Expression.New(constructor, arguments);
+        var createExpression = Expression.Lambda<Func<T>>(newExpression);
+
+        return createExpression.Compile().Invoke();
+    }
+
+    public static T CreateInstanceUsingActivator<T>(DataClass data)
+    {
+        Type instanceType = typeof(T);
+        var constructor = instanceType.GetConstructors().First();
+        var properties = typeof(T).GetProperties();
+        List<object> arguments = new();
+
+        foreach(var parameter in constructor.GetParameters())
+        {
+            var dataProperty = typeof(DataClass).GetProperties()
+                .Where(p => p.Name == parameter.Name)
+                .First();
+
+            var dataValue = dataProperty.GetValue(data);
+
+            arguments.Add(dataValue);
+        }
+
+        return (T)Activator.CreateInstance(instanceType, arguments.ToArray());
+    }
+
     public static T CreateInstanceFromData<T>(DataClass data)
     {
         Type instanceType = typeof(T);

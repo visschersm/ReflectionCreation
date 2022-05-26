@@ -11,6 +11,9 @@ var data = new DataClass
     Email = "test@test.test"
 };
 
+var creationTest = Reflector.CreateInstanceUsingActivator<FooRecord>(data);
+var creationTest2 = Reflector.CreateInstanceUsingExpressions<FooRecord>(data);
+return;
 var instanceType = typeof(FooRecord);
 var constructor = instanceType.GetConstructors().Single();
 var parameters = constructor.GetParameters();
@@ -23,16 +26,12 @@ foreach(var parameter in parameters)
         .First();
 
     var dataValue = dataProperty.GetValue(data);
-
-    var parameterExpression = Expression.Parameter(dataProperty.PropertyType, dataProperty.Name);
-    paramExpressions.Add(parameterExpression);
-    arguments.Add(Expression.Assign(
-        parameterExpression, 
-        Expression.Constant(dataValue)));
+    
+    arguments.Add(Expression.Constant(dataValue));
 }
 
 var newExpression = Expression.New(constructor, arguments.ToArray());
-var foo = Expression.Lambda<Func<FooRecord>>(newExpression, paramExpressions.ToArray());
+var foo = Expression.Lambda<Func<FooRecord>>(newExpression);//, paramExpressions.ToArray());
 var Creator = foo.Compile();
 var result = Creator();
 return;
